@@ -1,15 +1,28 @@
 package org.example;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
         try{
+            /*
+            connessione al database, connessione allo statement
+            utilizzato per eseguire query e creazione di resultSet
+            per ritornare valori su java
+             */
             Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/newdb","developer", "developer");
             Statement statement = connection.createStatement();
             ResultSet resultSet;
+
+            /*
+            creazione della tabella se esiste (IF NOT EXISTS) 'students'
+            con specifici valori
+             */
             String sql = "CREATE TABLE IF NOT EXISTS students " +
                     "(student_id INT(10) NOT NULL AUTO_INCREMENT, " +
                     " last_name VARCHAR(30) NOT NULL, " +
@@ -17,6 +30,12 @@ public class Main {
                     " PRIMARY KEY (student_id))";
             statement.executeUpdate(sql);
 
+            /*
+            Creazione delle liste con valori
+            casuali e utilizzando ciclo for riempimento
+            della tabella verificando prima se quei valori
+            se sono già presenti
+             */
             List<String> lastNames = new ArrayList<>();
             lastNames.add("Rossi");
             lastNames.add("La manna");
@@ -35,10 +54,60 @@ public class Main {
                         statement.executeUpdate(sql);
                     }
                 }
+
+            /*
+            Stampa di tutti i valori contenuti nella tabella students
+            utilizzanto next() ovvero finchè trova valore
+             */
             resultSet = statement.executeQuery("Select * from students;");
             while(resultSet.next()){
                 System.out.println(resultSet.getString("first_name")+" "+resultSet.getString("last_name"));
             }
+            /*
+            Verifica se già esiste una colonna 'country' nella tabella 'students'
+            se esiste tramite i metodi:
+            next()->sposta il cursore alla prima riga del risultato
+            getInt()->restituisce il valore della prima colonna della prima riga del risultato
+            se restituisce 1 allora esiste se restituisce 0 allora non esiste
+             */
+            sql= "SELECT COUNT(*) "+
+                 "FROM INFORMATION_SCHEMA.COLUMNS "+
+                 "WHERE table_name = 'students' AND column_name = 'country';";
+            resultSet = statement.executeQuery(sql);
+            resultSet.next();
+            int verify = resultSet.getInt(1);
+            if(verify==0){
+                sql= "ALTER TABLE students "+
+                     "ADD country VARCHAR(30);";
+                statement.executeUpdate(sql);
+            }
+
+            /*
+            Assegno i valori Italy e Germany agli studenti
+            sfrutto l'indice del ciclo for per prendere gli
+            studenti in base al loro id (pari o dispari)
+            se pari assegna Italy se dispari Germany
+             */
+           for (int i=1; i <= firstNames.size(); i++) {
+                    if(i%2==0) {
+                        sql = "UPDATE students "+
+                              "SET country = 'Italy' "+
+                              "WHERE student_id= "+i;
+                        statement.executeUpdate(sql);
+                    }else {
+                        sql = "UPDATE students "+
+                              "SET country = 'Germany' "+
+                              "WHERE student_id= "+i;
+                        statement.executeUpdate(sql);
+                    }
+            }
+
+            /*
+            chiusura di tutte le connessioni
+             */
+            connection.close();
+            statement.close();
+            resultSet.close();
         }catch (Exception e) {
             e.printStackTrace();
         }
