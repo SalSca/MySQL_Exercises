@@ -18,7 +18,7 @@ public class Main {
             Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/newdb","developer", "developer");
             Statement statement = connection.createStatement();
             ResultSet resultSet;
-
+            int verify;
             /*
             creazione della tabella se esiste (IF NOT EXISTS) 'students'
             con specifici valori
@@ -53,15 +53,15 @@ public class Main {
                         sql = "INSERT INTO students (last_name, first_name) VALUES('" + lastNames.get(i) + "','" + firstNames.get(i) + "')";
                         statement.executeUpdate(sql);
                     }
-                }
-
+            }
             /*
             Stampa di tutti i valori contenuti nella tabella students
-            utilizzanto next() ovvero finchè trova valore
+            utilizzando next() ovvero finché trova valore
              */
             resultSet = statement.executeQuery("Select * from students;");
+            System.out.println("\nThe students in the database are:");
             while(resultSet.next()){
-                System.out.println(resultSet.getString("first_name")+" "+resultSet.getString("last_name"));
+                System.out.println("-"+resultSet.getString("first_name")+" "+resultSet.getString("last_name"));
             }
             /*
             Verifica se già esiste una colonna 'country' nella tabella 'students'
@@ -71,14 +71,14 @@ public class Main {
             se restituisce 1 allora esiste se restituisce 0 allora non esiste
              */
             sql= "SELECT COUNT(*) "+
-                 "FROM INFORMATION_SCHEMA.COLUMNS "+
-                 "WHERE table_name = 'students' AND column_name = 'country';";
+                    "FROM INFORMATION_SCHEMA.COLUMNS "+
+                    "WHERE table_name = 'students' AND column_name = 'country';";
             resultSet = statement.executeQuery(sql);
             resultSet.next();
-            int verify = resultSet.getInt(1);
+            verify = resultSet.getInt(1);
             if(verify==0){
                 sql= "ALTER TABLE students "+
-                     "ADD country VARCHAR(30);";
+                        "ADD country VARCHAR(30);";
                 statement.executeUpdate(sql);
             }
 
@@ -100,6 +100,53 @@ public class Main {
                               "WHERE student_id= "+i;
                         statement.executeUpdate(sql);
                     }
+            }
+
+           /*
+           creazione delle viste per la visualizzazione
+           facilitata degli studenti italiani e tedeschi
+            */
+
+                sql="CREATE OR REPLACE VIEW italian_students AS "+
+                        "SELECT last_name,first_name "+
+                        "FROM students "+
+                        "WHERE country = 'Italy'";
+                statement.executeUpdate(sql);
+
+                sql="CREATE OR REPLACE VIEW german_students AS "+
+                        "SELECT last_name,first_name "+
+                        "FROM students "+
+                        "WHERE country = 'Germany'";
+                statement.executeUpdate(sql);
+
+          /*
+          Creazione e riempimento delle liste 'italianStudents' e
+          'germanStudents'
+          */
+           List<Student> italianStudents = new ArrayList<>();
+           resultSet = statement.executeQuery("SELECT last_name, first_name FROM italian_students");
+           while(resultSet.next()){
+               String first_name= resultSet.getString("first_name");
+               String last_name= resultSet.getString("last_name");
+               italianStudents.add(new Student(first_name,last_name));
+           }
+
+            System.out.println("\nItalian students:");
+            for (Student student : italianStudents) {
+                System.out.println("-"+student.getName() + " " + student.getSurname());
+            }
+
+            List<Student> germanStudents = new ArrayList<>();
+            resultSet = statement.executeQuery("SELECT last_name, first_name FROM german_students");
+            while(resultSet.next()){
+                String first_name= resultSet.getString("first_name");
+                String last_name= resultSet.getString("last_name");
+                germanStudents.add(new Student(first_name,last_name));
+            }
+
+            System.out.println("\nGerman students:");
+            for (Student student : germanStudents) {
+                System.out.println("-"+student.getName() + " " + student.getSurname());
             }
 
             /*
