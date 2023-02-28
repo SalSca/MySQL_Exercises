@@ -107,17 +107,12 @@ public class Main {
            facilitata degli studenti italiani e tedeschi
             */
 
-                sql="CREATE OR REPLACE VIEW italian_students AS "+
+                sql="CREATE OR REPLACE VIEW %s_students AS "+
                         "SELECT last_name,first_name "+
                         "FROM students "+
-                        "WHERE country = 'Italy'";
-                statement.executeUpdate(sql);
-
-                sql="CREATE OR REPLACE VIEW german_students AS "+
-                        "SELECT last_name,first_name "+
-                        "FROM students "+
-                        "WHERE country = 'Germany'";
-                statement.executeUpdate(sql);
+                        "WHERE country = '%s'";
+                statement.executeUpdate(String.format(sql,"italian","Italy"));
+                statement.executeUpdate(String.format(sql,"german","Germany"));
 
           /*
           Creazione e riempimento delle liste 'italianStudents' e
